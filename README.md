@@ -1,2 +1,2 @@
 # Overview
-这是我们关于NS-3-LEO-Parallelization的项目文件代码，我们上传了ns-3的整个文件夹，因此我们需要声明项目运行需要的依赖环境的配置和运行NS-3-LEO-Parallelization的方法。我们在ns-3中的贡献也会说明。
+This is our project file code about NS-3-LEO-Parallelization, we uploaded the whole folder of ns-3, so we need to declare the configuration of the dependent environments needed to run the project and the method to run NS-3-LEO-Parallelization. Our contribution in ns-3 is also described.
