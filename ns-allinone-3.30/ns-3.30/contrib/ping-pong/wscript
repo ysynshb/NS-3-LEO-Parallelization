@@ -1,0 +1,13 @@
+def build(bld):
+    module= bld.create_ns3_module('ping-pong')
+    module.source = [
+        'model/ping-pong.cc',
+        'model/tcp-poll.cc',
+    ]
+    headers = bld(features='ns3header')
+    headers.module ='ping-pong'
+    headers.source =[
+        'model/abc.h',
+        'model/ping-pong.h',
+        'model/tcp-poll.h',
+    ]
