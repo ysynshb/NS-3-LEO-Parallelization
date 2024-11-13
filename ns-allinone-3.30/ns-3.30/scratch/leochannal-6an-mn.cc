@@ -60,41 +60,55 @@ void CourseChange (std::string context, Ptr<const MobilityModel> position)
 {
   Vector pos = position->GetPosition ();
   Ptr<const Node> node = position->GetObject<Node> ();
-  
- 
+  //std::cout << Simulator::Now () << "，" << "节点"<<node->GetId () << ":  " << pos.x << " | " << pos.y << " | " << pos.z << " | "<< std::endl;
+  //std::cout << "1" <<std::endl;
+  //if(node->GetId ()==0){NS_LOG_UNCOND ("节点 "<<node->GetId ()<<" "<<pos.z);}
+  if(pos.z>7114500 || pos.z<-7114500)
+  {
+    NS_LOG_UNCOND (Simulator::Now ()<<", 节点 "<<node->GetId ()<<" 位置大于70度");
+  }else
+    {
+      NS_LOG_UNCOND (Simulator::Now ()<<", 节点 "<<node->GetId ()<<" 位置小于70度");
+    }
   for(uint32_t i = 0 ;i<node->GetNDevices();i++)
     {Ptr<NetDevice> dev =node->GetDevice(i);
      Ptr<Channel> channel=dev->GetChannel();
      if(DynamicCast<PointToPointChannel> (channel))
-       {
+       {//std::cout<<"存在p2pchannel";
+        //std::cout<<i<<std::endl;
         Ptr<PointToPointNetDevice> p2pdev = DynamicCast<PointToPointNetDevice> (dev);
         Ptr<PointToPointChannel> p2pchannel = DynamicCast<PointToPointChannel> (channel);
          Ptr<PointToPointNetDevice> p2pdevice1 = p2pchannel->GetPointToPointDevice(0);
         Ptr<PointToPointNetDevice> p2pdevice2 = p2pchannel->GetPointToPointDevice(1);
-     
+        if(p2pdev==p2pdevice1){//std::cout<<"等于1"<<std::endl;
+				};
+	if(p2pdev==p2pdevice2){//std::cout<<"等于2"<<std::endl;
+				}
+	//p2pchannel->shuchu();
         uint16_t lastp2pdevstate = p2pdev->getdevicestate();
 	if(pos.z>7114500 || pos.z<-7114500)
           {     
                 if(lastp2pdevstate ==1 || lastp2pdevstate ==3)
                   {p2pdev->setdevicestate(true);
    		p2pchannel->setchannelstate(false);
-                //NS_LOG_UNCOND( "节点"<<node->GetId ()<<"的"<<i<<"端口因高纬度关闭，所在信道关闭");}
+                std::cout<< "节点"<<node->GetId ()<<"的"<<i<<"端口因高纬度关闭，所在信道关闭"<<std::endl;}
                 
-		
+		//std::cout<< "节点"<<node->GetId ()<<"位置大于70度:"<< pos.z<<std::endl;
 	  } else 
 	    {   
                 if((p2pdevice1->getdevicestate()==3) || (p2pdevice2->getdevicestate()==3))
                 {
-                  //NS_LOG_UNCOND ("节点 "<<node->GetId ()<<"的"<<i<<"端口所在的信道关闭");
+                  NS_LOG_UNCOND ("节点 "<<node->GetId ()<<"的"<<i<<"端口所在的信道关闭");
                   p2pchannel->setchannelstate(false);
                 }
                 if(lastp2pdevstate ==2 || lastp2pdevstate ==4)
                  {p2pdev->setdevicestate(true);}
                 if((p2pdevice1->getdevicestate()==1) && (p2pdevice2->getdevicestate()==1))
                   {  p2pchannel->setchannelstate(true);
-                     //NS_LOG_UNCOND ("节点 "<<node->GetId ()<<"的"<<i<<" 端口恢复正常");
+                     NS_LOG_UNCOND ("节点 "<<node->GetId ()<<"的"<<i<<" 端口恢复正常@@@@@@@@@@@");
 		    }
-               
+                //NS_LOG_UNCOND ("节点 "<<node->GetId ()<<" 位置小于70度=========");
+                //p2pchannel->setchannelstate(true);
                 
 	     }
 	}
@@ -109,7 +123,7 @@ main (int argc, char *argv[])
   uint32_t numsatellites = 8;
   uint32_t duration =150;
   double interval = 0.01; // seconds
-  uint32_t sendnode = numsatellites/4;
+  uint32_t sendnode = 2;
   uint32_t nummpi = 6;
   double lose = 0;
   uint32_t last=TimeMillis();
@@ -174,7 +188,7 @@ main (int argc, char *argv[])
  
   for(uint32_t i = 0;i<numorbits;i++)
     {mobility.Install (Nodes[i]);}
-
+//安装进程间信道
   PointToPointHelper P2PLink[numorbits-1];
   for(uint32_t i = 0;i<numorbits-1;i++)
   {P2PLink[i].SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
@@ -183,7 +197,7 @@ main (int argc, char *argv[])
 
 
 
-
+//安装进程内信道
   PointToPointHelper CsmaLink[numorbits];
   for(uint32_t i = 0;i<numorbits;i++)
   {
@@ -306,7 +320,7 @@ main (int argc, char *argv[])
       
       Ptr<OutputStreamWrapper> routingStream2 = Create<OutputStreamWrapper> ("pcap/mpi-aodv17.routes", std::ios::out);
       list.PrintRoutingTableAllAt (Seconds (17), routingStream2);
-
+   
      
     }
  
@@ -328,7 +342,17 @@ main (int argc, char *argv[])
 
       
     }
-CsmaLink[0].EnablePcap("pcap/CsmaLink", CsmaDevices[0], true);
+   for(uint32_t u = 0; u < numorbits; ++u)   
+    {  
+      //CsmaLink[u].EnablePcapAll ("pcap/CsmaLink");
+      CsmaLink[u].EnablePcap("pcap/CsmaLink", CsmaDevices[u], true);
+    };
+  for(uint32_t u = 0; u < numorbits-1; ++u)   
+    {
+      //P2PLink[u].EnablePcapAll ("pcap/P2PLink");
+      P2PLink[u].EnablePcap("pcap/P2PLink", P2PDevices[2*u], true);
+      P2PLink[u].EnablePcap("pcap/P2PLink", P2PDevices[2*u+1], true);
+    } 
 
   Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",MakeCallback (&CourseChange)); 
    std::streambuf *coutbuf = std::cout.rdbuf();
